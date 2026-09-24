@@ -1,5 +1,5 @@
 wake_word:
-  name: "alexa"
+  name: "hey_jarvis"
   confidence_threshold: 0.8
 
 transcriber:
@@ -23,7 +23,8 @@ commands:
   "start dev mode": "open_all"
   "work mode": "open_all"
   "open everything": "open_all"
-  "daddy'a home": "open_all"
+  "daddy's home": "open_all"
+  "dad is home": "open_all"
   "open claude": "open_claude"
   "open cloud": "open_claude"
   "open edge": "open_edge"

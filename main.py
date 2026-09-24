@@ -4,6 +4,7 @@ GPU-rendered overlay (overlay_gl.py) reflecting pipeline state on screen.
 Run this. Everything else is a module.
 """
 
+import os
 import sys
 import threading
 import time
@@ -11,13 +12,52 @@ import time
 import yaml
 from PyQt6.QtWidgets import QApplication
 
+UNRECOGNISED_COOLDOWN_SECONDS = 1.0
+
+
+def _fixup_npu_dll_path():
+    """The VitisAI execution provider's vaiml.dll (from the flexml package)
+    is loaded by onnxruntime's native code via LoadLibrary at runtime, not a
+    Python import — Nuitka's dependency scanner can't see that reference, so
+    it won't get bundled/pathed automatically like a normal import would be.
+
+    In dev, this DLL lives inside the conda env's site-packages; in a
+    compiled build, build.bat copies that same folder next to the exe.
+    Either way, add it to the DLL search path *before* importing anything
+    that transitively imports onnxruntime.
+    """
+    candidates = []
+    if getattr(sys, "frozen", False) or "__compiled__" in globals():
+        # Compiled build: bundled next to the exe by build.bat / build_pyinstaller.bat.
+        candidates.append(os.path.join(os.path.dirname(sys.executable), "flexml_lib"))
+        # PyInstaller onefile extracts data files under sys._MEIPASS instead.
+        if hasattr(sys, "_MEIPASS"):
+            candidates.append(os.path.join(sys._MEIPASS, "flexml_lib"))
+    else:
+        # Dev: locate via the currently-running conda env's onnxruntime install.
+        try:
+            import onnxruntime  # noqa: F401 -- just to resolve site-packages path
+            site_packages = os.path.dirname(os.path.dirname(onnxruntime.__file__))
+            candidates.append(os.path.join(site_packages, "flexml", "flexml_extras", "lib"))
+        except ImportError:
+            pass
+
+    for path in candidates:
+        if os.path.isdir(path):
+            os.add_dll_directory(path)
+            return
+
+    print(f"[main] Warning: flexml DLL directory not found (tried {candidates}). "
+          f"NPU acceleration may fail to load.")
+
+
+_fixup_npu_dll_path()
+
 from listener import Listener
 from transcriber import Transcriber
 from intent import IntentMatcher
 from actions.registry import dispatch
 from overlay_gl import JarvisOverlayGL
-
-UNRECOGNISED_COOLDOWN_SECONDS = 1.0
 
 
 def load_config(path: str = "config.yaml") -> dict:

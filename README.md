@@ -21,9 +21,15 @@ Pipeline: **wake word → NPU speech-to-text (Whisper) → intent matching → a
 ## Requirements
 
 - Windows 11
-- An AMD Ryzen AI laptop with an NPU (developed on a ROG Zephyrus G14 GA403, Ryzen AI 300 series)
+- An AMD Ryzen AI laptop with an XDNA NPU
 - [AMD's RyzenAI SDK](https://ryzenai.docs.amd.com/) installed, which provisions a **conda environment** (`ryzen-ai-1.8.0` by default) with an NPU-patched build of `onnxruntime` (`onnxruntime-vitisai`) that exposes `VitisAIExecutionProvider`
 - [AMD's RyzenAI-SW repo](https://github.com/amd/RyzenAI-SW), specifically `Demos/ASR/Whisper/`, copied into this project as `Whisper/`
+
+### Hardware compatibility
+
+Tested on an **AMD Ryzen AI 9 HX 370** (XDNA2 NPU). Other Ryzen AI chips (300/8000 series and newer, anything RyzenAI-SW/`VitisAIExecutionProvider` supports) should work but haven't been verified here — expect to tweak NPU provider options in `Whisper/config/*.json` if things don't just work.
+
+**Intel NPUs (Core Ultra / AI Boost) are not supported as-is.** This project is built directly on AMD's `VitisAIExecutionProvider`, which is AMD-specific. Running on an Intel NPU means swapping the execution backend — e.g. onnxruntime's `OpenVINOExecutionProvider` or Intel's NPU plugin — and reworking `transcriber.py` / `Whisper/run_whisper.py`'s provider setup accordingly. CPU-only fallback (no NPU) should work on any machine by pointing onnxruntime at `CPUExecutionProvider`, just much slower.
 
 ### Why a conda env, not a venv
 

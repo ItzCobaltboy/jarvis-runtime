@@ -3,6 +3,7 @@ Whisper transcription via AMD's RyzenAI-SW WhisperONNX (Whisper/run_whisper.py),
 run in-process using onnxruntime's VitisAI execution provider for NPU offload.
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -15,18 +16,31 @@ from run_whisper import WhisperONNX, load_provider_options, download_whisper_onn
 
 SAMPLE_RATE = 16000
 
+# In a compiled (PyInstaller/Nuitka onefile) build, __file__ resolves inside a
+# temp extraction directory that's wiped after the process exits — caching the
+# NPU-compiled model there would force a ~15min recompile on every single
+# launch. Redirect the cache to a stable per-user location instead.
+if getattr(sys, "frozen", False) or "__compiled__" in globals():
+    _CACHE_DIR = Path(os.environ["LOCALAPPDATA"]) / "jarvis-runtime" / "Whisper" / "cache"
+else:
+    _CACHE_DIR = _WHISPER_DIR / "cache"
+
 
 def _resolve_config_paths(model_config: dict, base_dir: Path):
     """model_config.json's config_file/cache_dir entries are relative to Whisper/;
     onnxruntime's VitisAI EP resolves them against the process cwd, not this file,
-    so rewrite them to absolute paths regardless of where the caller runs from."""
+    so rewrite them to absolute paths regardless of where the caller runs from.
+    cache_dir is redirected to _CACHE_DIR so compiled builds persist the NPU
+    compile cache across runs instead of losing it with the temp extraction dir."""
     for model_variants in model_config.get("whisper", {}).values():
         for device_opts in model_variants.values():
             for stage in ("encoder", "decoder"):
                 opts = device_opts.get(stage, {})
-                for key in ("config_file", "cache_dir"):
-                    if opts.get(key):
-                        opts[key] = str((base_dir / opts[key]).resolve())
+                if opts.get("config_file"):
+                    opts["config_file"] = str((base_dir / opts["config_file"]).resolve())
+                if opts.get("cache_dir"):
+                    _CACHE_DIR.mkdir(parents=True, exist_ok=True)
+                    opts["cache_dir"] = str(_CACHE_DIR)
 
 
 class Transcriber:
