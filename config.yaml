@@ -1,0 +1,47 @@
+wake_word:
+  name: "alexa"
+  confidence_threshold: 0.8
+
+transcriber:
+  model_type: "whisper-small"
+  device: "npu"
+  config_file: "config/model_config.json"
+
+intent:
+  model_name: "all-MiniLM-L6-v2"
+  confidence_threshold: 0.6
+
+commands:
+  "open chrome": "open_chrome"
+  "open spotify": "open_spotify"
+  "bravo six going dark": "sleep_system"
+  "lock out": "sleep_system"
+  "what time is it": "tell_time"
+  "turn on hotspot": "hotspot_on"
+  "turn off hotspot": "hotspot_off"
+
+  "start dev mode": "open_all"
+  "work mode": "open_all"
+  "open everything": "open_all"
+  "daddy'a home": "open_all"
+  "open claude": "open_claude"
+  "open cloud": "open_claude"
+  "open edge": "open_edge"
+  "open vs code": "open_vscode"
+  "open steam": "open_steam"
+
+  "toggle playback": "music_play_pause"
+  "next song": "music_next"
+  "play next": "music_next"
+  "previous song": "music_prev"
+  "play previous": "music_prev"
+  "volume up": "music_volume_up"
+  "volume down": "music_volume_down"
+  "mute": "music_mute"
+
+  "lock screen": "lock_screen"
+  "lock the screen": "lock_screen"
+  "cancel": "cancel"
+  "nevermind": "cancel"
+  "never mind": "cancel"
+  "forget it": "cancel"

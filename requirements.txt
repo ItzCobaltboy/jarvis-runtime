@@ -1,0 +1,44 @@
+# Install into the ryzen-ai-1.8.0 conda env (created from AMD's RyzenAI SDK installer,
+# which already provides torch, transformers, onnxruntime-vitisai, etc).
+# Do NOT use a separate venv — the VitisAI NPU execution provider only exists
+# in this conda env, so everything runs from its python.exe.
+#
+#   pip install --no-deps -r requirements.txt
+#
+# --no-deps matters: letting pip pull deps here can clobber the RyzenAI-patched
+# onnxruntime (onnxruntime-vitisai) with a plain onnxruntime build, which
+# silently drops the VitisAIExecutionProvider.
+
+# Wake word detection
+openWakeWord
+
+# Audio
+pyaudio
+sounddevice
+soundfile
+
+# Transcription (via Whisper/run_whisper.py's WhisperONNX)
+# Do NOT pin transformers here — use whatever the conda env ships natively
+# (currently 4.57.6). Pinning to an older version once caused a torch/torchvision
+# ABI mismatch when a stray install shadowed the env's native torch build.
+torchaudio==2.4.1  # must match the conda env's native torch version exactly
+jiwer
+
+# Intent matching
+sentence-transformers
+
+# Utilities
+pyyaml
+
+# Windows system actions
+# Hotspot (WinRT NetworkOperatorTetheringManager):
+winrt-runtime
+winrt-Windows.Networking.NetworkOperators
+winrt-Windows.Networking.Connectivity
+# Volume/mute control:
+pycaw
+comtypes
+
+# Overlay UI (overlay_gl.py): GPU-shader vignette + state pill
+PyQt6
+PyOpenGL
